@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Auth</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --primary: #8b5cf6;
+      --bg: #0f1724;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: Inter, system-ui, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 380px;
+      background: var(--card);
+      padding: 28px;
+      border-radius: 14px;
+      box-shadow: 0 15px 35px rgba(0,0,0,.08);
+    }
+
+    h2 {
+      margin-bottom: 6px;
+      color: var(--text);
+      text-align: center;
+    }
+
+    p.sub {
+      text-align: center;
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      font-size: 14px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: var(--primary);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    .link {
+      text-align: center;
+      font-size: 13px;
+      color: var(--primary);
+      cursor: pointer;
+      margin-top: 12px;
+    }
+
+    .error {
+      color: var(--danger);
+      font-size: 13px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- LOGIN -->
+  <div id="login">
+    <h2>Login</h2>
+    <p class="sub">Welcome back</p>
+    <div class="error" id="loginError"></div>
+    <input id="loginEmail" placeholder="Email">
+    <input id="loginPassword" type="password" placeholder="Password">
+    <button type="button" onclick="login()">Login</button>
+    <div class="link" onclick="show('signup')">Create account</div>
+    <div class="link" onclick="show('forgot')">Forgot password?</div>
+  </div>
+
+  <!-- SIGNUP -->
+  <div id="signup" class="hidden">
+    <h2>Sign up</h2>
+    <p class="sub">Create your account</p>
+    <div class="error" id="signupError"></div>
+    <input id="signupName" placeholder="Name">
+    <input id="signupEmail" placeholder="Email">
+    <input id="signupPassword" type="password" placeholder="Password">
+    <button type="button" onclick="signup()">Sign up</button>
+    <div class="link" onclick="show('login')">Already have an account?</div>
+  </div>
+
+  <!-- FORGOT -->
+  <div id="forgot" class="hidden">
+    <h2>Forgot password</h2>
+    <p class="sub">OTP will be sent to email</p>
+    <div class="error" id="forgotError"></div>
+    <input id="forgotEmail" placeholder="Email">
+    <button type="button" onclick="forgot()">Send OTP</button>
+    <div class="link" onclick="show('login')">Back to login</div>
+  </div>
+
+  <!-- OTP -->
+  <div id="otp" class="hidden">
+    <h2>Verify OTP</h2>
+    <p class="sub">Check your email</p>
+    <div class="error" id="otpError"></div>
+    <input id="otpCode" placeholder="6-digit OTP">
+    <button type="button" onclick="verifyOtp()">Verify</button>
+  </div>
+
+  <!-- RESET -->
+  <div id="reset" class="hidden">
+    <h2>Reset password</h2>
+    <p class="sub">Create a new password</p>
+    <div class="error" id="resetError"></div>
+    <input id="resetPassword" type="password" placeholder="New password">
+    <button type="button" onclick="resetPasswordFn()">Reset</button>
+  </div>
+
+</div>
+
+<script>
+  const API = "http://127.0.0.1:5000/auth";
+  let otpEmail = "";
+
+  function show(id) {
+    ["login","signup","forgot","otp","reset"].forEach(v =>
+      document.getElementById(v).classList.add("hidden")
+    );
+    document.getElementById(id).classList.remove("hidden");
+  }
+
+  function saveToken(token) {
+    localStorage.setItem("token", token);
+    window.location.href = "/dashboard";
+  }
+
+  async function signup() {
+    const res = await fetch(API + "/signup", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        name: signupName.value,
+        email: signupEmail.value,
+        password: signupPassword.value
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) return signupError.innerText = data.error || "Signup failed";
+    saveToken(data.token);
+  }
+
+  async function login() {
+    const res = await fetch(API + "/login", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        email: loginEmail.value,
+        password: loginPassword.value
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) return loginError.innerText = data.error || "Login failed";
+    saveToken(data.token);
+  }
+
+  async function forgot() {
+    otpEmail = forgotEmail.value;
+    const res = await fetch(API + "/forgot-password", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ email: otpEmail })
+    });
+    if (res.ok) show("otp");
+    else forgotError.innerText = "Failed to send OTP";
+  }
+
+  async function verifyOtp() {
+    const res = await fetch(API + "/verify-otp", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        email: otpEmail,
+        otp: otpCode.value
+      })
+    });
+    if (res.ok) show("reset");
+    else otpError.innerText = "Invalid OTP";
+  }
+
+  async function resetPasswordFn() {
+    const res = await fetch(API + "/reset-password", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        email: otpEmail,
+        otp: otpCode.value,
+        password: resetPassword.value
+      })
+    });
+    if (res.ok) show("login");
+    else resetError.innerText = "Reset failed";
+  }
+</script>
+
+</body>
+</html>
