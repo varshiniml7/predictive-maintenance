@@ -151,7 +151,8 @@
 </div>
 
 <script>
-  const API = "http://127.0.0.1:5000/auth";
+  const API = "/auth";
+
   let otpEmail = "";
 
   function show(id) {
@@ -163,7 +164,7 @@
 
   function saveToken(token) {
     localStorage.setItem("token", token);
-    window.location.href = "/dashboard";
+    window.location.href = "/static/dashboard.html";
   }
 
   async function signup() {
