@@ -178,8 +178,8 @@
       })
     });
     const data = await res.json();
-    if (!res.ok) return signupError.innerText = data.error || "Signup failed";
-    saveToken(data.token);
+    if (!res.ok) return signupError.innerText = data.message || data.error || "Signup failed";
+
   }
 
   async function login() {
@@ -192,47 +192,132 @@
       })
     });
     const data = await res.json();
-    if (!res.ok) return loginError.innerText = data.error || "Login failed";
+   if (!res.ok) return loginError.innerText = data.message || data.error || "Login failed";
+
     saveToken(data.token);
   }
 
   async function forgot() {
-    otpEmail = forgotEmail.value;
-    const res = await fetch(API + "/forgot-password", {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({ email: otpEmail })
-    });
-    if (res.ok) show("otp");
-    else forgotError.innerText = "Failed to send OTP";
+  otpEmail = forgotEmail.value;
+
+  const res = await fetch(API + "/forgot-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: otpEmail })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    forgotError.innerText = data.message || data.error || "Failed to send OTP";
+    return;
   }
 
-  async function verifyOtp() {
-    const res = await fetch(API + "/verify-otp", {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({
-        email: otpEmail,
-        otp: otpCode.value
-      })
-    });
-    if (res.ok) show("reset");
-    else otpError.innerText = "Invalid OTP";
+  show("otp");
+}
+
+async function verifyOtp() {
+  const res = await fetch(API + "/verify-otp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: otpEmail,
+      otp: otpCode.value
+    })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    otpError.innerText = data.message || data.error || "Invalid OTP";
+    return;
   }
 
-  async function resetPasswordFn() {
-    const res = await fetch(API + "/reset-password", {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({
-        email: otpEmail,
-        otp: otpCode.value,
-        password: resetPassword.value
-      })
-    });
-    if (res.ok) show("login");
-    else resetError.innerText = "Reset failed";
+  show("reset");
+}
+
+async function resetPasswordFn() {
+  const res = await fetch(API + "/reset-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: otpEmail,
+      otp: otpCode.value,
+      password: resetPassword.value
+    })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    resetError.innerText = data.message || data.error || "Reset failed";
+    return;
   }
+
+  alert("Password reset successful. Please login.");
+  show("login");
+}
+async function forgot() {
+  otpEmail = forgotEmail.value;
+
+  const res = await fetch(API + "/forgot-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: otpEmail })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    forgotError.innerText = data.message || data.error || "Failed to send OTP";
+    return;
+  }
+
+  show("otp");
+}
+
+async function verifyOtp() {
+  const res = await fetch(API + "/verify-otp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: otpEmail,
+      otp: otpCode.value
+    })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    otpError.innerText = data.message || data.error || "Invalid OTP";
+    return;
+  }
+
+  show("reset");
+}
+
+async function resetPasswordFn() {
+  const res = await fetch(API + "/reset-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: otpEmail,
+      otp: otpCode.value,
+      password: resetPassword.value
+    })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    resetError.innerText = data.message || data.error || "Reset failed";
+    return;
+  }
+
+  alert("Password reset successful. Please login.");
+  show("login");
+}
+
 </script>
 
 </body>
