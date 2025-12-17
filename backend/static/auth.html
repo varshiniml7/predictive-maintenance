@@ -103,7 +103,7 @@
     <div class="error" id="loginError"></div>
     <input id="loginEmail" placeholder="Email">
     <input id="loginPassword" type="password" placeholder="Password">
-    <button type="button" onclick="login()">Login</button>
+    <button onclick="login()">Login</button>
     <div class="link" onclick="show('signup')">Create account</div>
     <div class="link" onclick="show('forgot')">Forgot password?</div>
   </div>
@@ -116,7 +116,7 @@
     <input id="signupName" placeholder="Name">
     <input id="signupEmail" placeholder="Email">
     <input id="signupPassword" type="password" placeholder="Password">
-    <button type="button" onclick="signup()">Sign up</button>
+    <button onclick="signup()">Sign up</button>
     <div class="link" onclick="show('login')">Already have an account?</div>
   </div>
 
@@ -126,7 +126,7 @@
     <p class="sub">OTP will be sent to email</p>
     <div class="error" id="forgotError"></div>
     <input id="forgotEmail" placeholder="Email">
-    <button type="button" onclick="forgot()">Send OTP</button>
+    <button onclick="forgot()">Send OTP</button>
     <div class="link" onclick="show('login')">Back to login</div>
   </div>
 
@@ -136,7 +136,7 @@
     <p class="sub">Check your email</p>
     <div class="error" id="otpError"></div>
     <input id="otpCode" placeholder="6-digit OTP">
-    <button type="button" onclick="verifyOtp()">Verify</button>
+    <button onclick="verifyOtp()">Verify</button>
   </div>
 
   <!-- RESET -->
@@ -145,14 +145,14 @@
     <p class="sub">Create a new password</p>
     <div class="error" id="resetError"></div>
     <input id="resetPassword" type="password" placeholder="New password">
-    <button type="button" onclick="resetPasswordFn()">Reset</button>
+    <button onclick="resetPasswordFn()">Reset</button>
   </div>
 
 </div>
 
 <script>
-  const API = "/auth";
-
+  // LOCALHOST ONLY (as you asked)
+  const API = "http://127.0.0.1:5000/auth";
   let otpEmail = "";
 
   function show(id) {
@@ -164,7 +164,8 @@
 
   function saveToken(token) {
     localStorage.setItem("token", token);
-    window.location.href = "/static/dashboard.html";
+    window.location.href = "/dashboard";
+;
   }
 
   async function signup() {
@@ -178,8 +179,8 @@
       })
     });
     const data = await res.json();
-    if (!res.ok) return signupError.innerText = data.message || data.error || "Signup failed";
-
+    if (!res.ok) return signupError.innerText = data.message || "Signup failed";
+    saveToken(data.token);
   }
 
   async function login() {
@@ -192,132 +193,48 @@
       })
     });
     const data = await res.json();
-   if (!res.ok) return loginError.innerText = data.message || data.error || "Login failed";
-
+    if (!res.ok) return loginError.innerText = data.message || "Login failed";
     saveToken(data.token);
   }
 
   async function forgot() {
-  otpEmail = forgotEmail.value;
-
-  const res = await fetch(API + "/forgot-password", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: otpEmail })
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    forgotError.innerText = data.message || data.error || "Failed to send OTP";
-    return;
+    otpEmail = forgotEmail.value;
+    const res = await fetch(API + "/forgot-password", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ email: otpEmail })
+    });
+    const data = await res.json();
+    if (!res.ok) return forgotError.innerText = data.message || "Failed to send OTP";
+    show("otp");
   }
 
-  show("otp");
-}
-
-async function verifyOtp() {
-  const res = await fetch(API + "/verify-otp", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      email: otpEmail,
-      otp: otpCode.value
-    })
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    otpError.innerText = data.message || data.error || "Invalid OTP";
-    return;
+  async function verifyOtp() {
+    const res = await fetch(API + "/verify-otp", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ email: otpEmail, otp: otpCode.value })
+    });
+    const data = await res.json();
+    if (!res.ok) return otpError.innerText = data.message || "Invalid OTP";
+    show("reset");
   }
 
-  show("reset");
-}
-
-async function resetPasswordFn() {
-  const res = await fetch(API + "/reset-password", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      email: otpEmail,
-      otp: otpCode.value,
-      password: resetPassword.value
-    })
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    resetError.innerText = data.message || data.error || "Reset failed";
-    return;
+  async function resetPasswordFn() {
+    const res = await fetch(API + "/reset-password", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        email: otpEmail,
+        otp: otpCode.value,
+        password: resetPassword.value
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) return resetError.innerText = data.message || "Reset failed";
+    alert("Password reset successful");
+    show("login");
   }
-
-  alert("Password reset successful. Please login.");
-  show("login");
-}
-async function forgot() {
-  otpEmail = forgotEmail.value;
-
-  const res = await fetch(API + "/forgot-password", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: otpEmail })
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    forgotError.innerText = data.message || data.error || "Failed to send OTP";
-    return;
-  }
-
-  show("otp");
-}
-
-async function verifyOtp() {
-  const res = await fetch(API + "/verify-otp", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      email: otpEmail,
-      otp: otpCode.value
-    })
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    otpError.innerText = data.message || data.error || "Invalid OTP";
-    return;
-  }
-
-  show("reset");
-}
-
-async function resetPasswordFn() {
-  const res = await fetch(API + "/reset-password", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      email: otpEmail,
-      otp: otpCode.value,
-      password: resetPassword.value
-    })
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    resetError.innerText = data.message || data.error || "Reset failed";
-    return;
-  }
-
-  alert("Password reset successful. Please login.");
-  show("login");
-}
-
 </script>
 
 </body>

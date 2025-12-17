@@ -1,6 +1,10 @@
 flask
 flask-cors
+flask-mail
+python-dotenv
 joblib
-pandas
 numpy
+pandas
+scikit-learn==1.6.1
 gunicorn
+bcrypt

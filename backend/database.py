@@ -4,5 +4,5 @@
 
 from auth_database import get_db_connection
 
-# Provide the same name used in the auth services
+# Provide the same name used in the auth services to import the db connection
 __all__ = ["get_db_connection"]
