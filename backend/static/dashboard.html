@@ -431,7 +431,8 @@ async function predictInline(){
   const inputHasOutliers = fields.some(k=>!inRange(k, Number(inputs[k])));
 
   // Use environment-based API URL or fallback to localhost for development
-  const API_BASE_URL = window.API_BASE_URL || 'http://localhost:5000';
+  const API_BASE_URL ="https://predictive-maintenance-i05f.onrender.com";
+;
   const API_URL = API_BASE_URL + '/predict';
   
   try{
