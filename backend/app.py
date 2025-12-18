@@ -62,7 +62,8 @@ app.mail = mail
 # AUTH BLUEPRINT
 # --------------------------------------------------
 try:
-    auth_module = importlib.import_module("backend.routes.auth")
+    auth_module = importlib.import_module("routes.auth")
+
     auth_bp = getattr(auth_module, "auth_bp", None)
     if auth_bp:
         app.register_blueprint(auth_bp, url_prefix="/auth")
